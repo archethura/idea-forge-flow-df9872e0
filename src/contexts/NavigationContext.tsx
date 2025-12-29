@@ -7,6 +7,7 @@ interface NavigationContextType {
   navigateToFolder: (folderId: string) => void;
   navigateToOutline: (outlineId: string) => void;
   navigateToDocument: (documentId: string) => void;
+  navigateToChat: (chatId: string) => void;
   navigateBack: () => void;
   reset: () => void;
 }
@@ -16,6 +17,7 @@ const defaultState: NavigationState = {
   folderId: null,
   outlineId: null,
   documentId: null,
+  chatId: null,
   level: 'space',
 };
 
@@ -30,6 +32,7 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       folderId: null,
       outlineId: null,
       documentId: null,
+      chatId: null,
       level: 'space',
     });
   }, []);
@@ -40,6 +43,7 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       folderId,
       outlineId: null,
       documentId: null,
+      chatId: null,
       level: 'folder',
     }));
   }, []);
@@ -49,6 +53,7 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       ...prev,
       outlineId,
       documentId: null,
+      chatId: null,
       level: 'outline',
     }));
   }, []);
@@ -57,7 +62,15 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setState(prev => ({
       ...prev,
       documentId,
+      chatId: null,
       level: 'document',
+    }));
+  }, []);
+
+  const navigateToChat = useCallback((chatId: string) => {
+    setState(prev => ({
+      ...prev,
+      chatId,
     }));
   }, []);
 
@@ -65,11 +78,11 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setState(prev => {
       switch (prev.level) {
         case 'document':
-          return { ...prev, documentId: null, level: 'outline' as NavigationLevel };
+          return { ...prev, documentId: null, chatId: null, level: 'outline' as NavigationLevel };
         case 'outline':
-          return { ...prev, outlineId: null, level: 'folder' as NavigationLevel };
+          return { ...prev, outlineId: null, chatId: null, level: 'folder' as NavigationLevel };
         case 'folder':
-          return { ...prev, folderId: null, level: 'space' as NavigationLevel };
+          return { ...prev, folderId: null, chatId: null, level: 'space' as NavigationLevel };
         default:
           return prev;
       }
@@ -88,6 +101,7 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         navigateToFolder,
         navigateToOutline,
         navigateToDocument,
+        navigateToChat,
         navigateBack,
         reset,
       }}

@@ -8,6 +8,8 @@ import { DocumentList } from '@/components/documents/DocumentList';
 import { PointTree } from '@/components/outlines/PointTree';
 import { CardEditor } from '@/components/documents/CardEditor';
 import { ChatPanel } from '@/components/chat/ChatPanel';
+import { ChatList } from '@/components/chat/ChatList';
+import { FolderChatPanel } from '@/components/chat/FolderChatPanel';
 import { useSpaces } from '@/hooks/useSpaces';
 import { useFolders } from '@/hooks/useFolders';
 import { useOutlines } from '@/hooks/useOutlines';
@@ -15,41 +17,61 @@ import { useDocuments } from '@/hooks/useDocuments';
 import { usePoints } from '@/hooks/usePoints';
 import { useCards } from '@/hooks/useCards';
 import { useNotes } from '@/hooks/useNotes';
+import { useChats, useChatMessages } from '@/hooks/useChats';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Layers, FolderIcon, FileText, File, Sparkles, List, PanelRightOpen, PanelRightClose } from 'lucide-react';
-import { useState } from 'react';
+import { Layers, FolderIcon, FileText, File, Sparkles, List, PanelRightOpen, PanelRightClose, MessageSquare } from 'lucide-react';
+import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 
 const WorkspaceContent: React.FC = () => {
-  const { state, navigateToSpace, navigateToFolder, navigateToOutline, navigateToDocument } = useNavigation();
+  const { state, navigateToSpace, navigateToFolder, navigateToOutline, navigateToDocument, navigateToChat } = useNavigation();
   const [showContent, setShowContent] = useState(true);
   
   const { spaces, refetch: refetchSpaces } = useSpaces();
   const { folders, createFolder, deleteFolder, refetch: refetchFolders } = useFolders(state.spaceId);
   const { notes, refetch: refetchNotes } = useNotes(state.folderId);
+  const { chats, createChat, updateChat, deleteChat, refetch: refetchChats } = useChats(state.folderId);
   const { outlines, createOutline, deleteOutline, refetch: refetchOutlines } = useOutlines(state.folderId);
   const { documents, createDocument, deleteDocument, refetch: refetchDocuments } = useDocuments(state.outlineId);
   const { pointTree, points, createPoint, updatePoint, deletePoint, refetch: refetchPoints } = usePoints(state.outlineId);
   const { cardTree, cards, createCard, updateCard, deleteCard, refetch: refetchCards } = useCards(state.documentId);
 
   // Refetch data after AI makes changes
-  const handleDataChange = () => {
+  const handleDataChange = useCallback(() => {
     refetchSpaces();
     refetchFolders();
     refetchNotes();
+    refetchChats();
     refetchOutlines();
     refetchDocuments();
     refetchPoints();
     refetchCards();
-  };
+  }, [refetchSpaces, refetchFolders, refetchNotes, refetchChats, refetchOutlines, refetchDocuments, refetchPoints, refetchCards]);
+
+  // Handle chat title updates
+  const handleChatTitleUpdate = useCallback((chatId: string, title: string) => {
+    updateChat(chatId, { title });
+  }, [updateChat]);
 
   // Get current items for breadcrumbs and context
   const currentSpace = spaces.find(s => s.id === state.spaceId);
   const currentFolder = folders.find(f => f.id === state.folderId);
   const currentOutline = outlines.find(o => o.id === state.outlineId);
   const currentDocument = documents.find(d => d.id === state.documentId);
+  const currentChat = chats.find(c => c.id === state.chatId);
 
-  // Build context for AI based on current level
+  // Build folder context for chat (includes all chats history and notes)
+  const folderContext = useMemo(() => {
+    if (!currentFolder) return {};
+    
+    return {
+      notes: notes?.map(n => ({ id: n.id, title: n.title, content: n.content })) || [],
+      // Note: chatHistory would need to be fetched with messages - for now we pass basic info
+      // The edge function will have access to the full folder context
+    };
+  }, [currentFolder, notes]);
+
+  // Build context for AI based on current level (for non-folder levels)
   const chatContext = useMemo(() => {
     const ctx: any = { level: state.level };
     
@@ -261,15 +283,44 @@ const WorkspaceContent: React.FC = () => {
         />
         
         <div className="flex-1 flex overflow-hidden">
-          {/* Chat Panel - Primary */}
-          <div className="flex-1 border-r border-border/30">
-            <ChatPanel 
-              context={chatContext} 
-              contextLabel={getContextLabel()} 
-              level={currentLevel}
-              onDataChange={handleDataChange}
-            />
-          </div>
+          {/* Folder level: Show chat list + folder chat panel */}
+          {state.level === 'folder' && state.folderId ? (
+            <>
+              {/* Chat List Sidebar */}
+              <div className="w-[240px] border-r border-border/30 bg-card/20">
+                <ChatList
+                  chats={chats}
+                  selectedChatId={state.chatId}
+                  onSelectChat={navigateToChat}
+                  onCreateChat={createChat}
+                  onDeleteChat={deleteChat}
+                />
+              </div>
+              
+              {/* Folder Chat Panel */}
+              <div className="flex-1 border-r border-border/30">
+                <FolderChatPanel
+                  chatId={state.chatId}
+                  chatTitle={currentChat?.title || 'New Chat'}
+                  folderId={state.folderId}
+                  folderName={currentFolder?.name || ''}
+                  folderContext={folderContext}
+                  onDataChange={handleDataChange}
+                  onChatTitleUpdate={handleChatTitleUpdate}
+                />
+              </div>
+            </>
+          ) : (
+            /* Other levels: Use regular ChatPanel */
+            <div className="flex-1 border-r border-border/30">
+              <ChatPanel 
+                context={chatContext} 
+                contextLabel={getContextLabel()} 
+                level={currentLevel}
+                onDataChange={handleDataChange}
+              />
+            </div>
+          )}
           
           {/* Content Panel - Secondary */}
           {showContent && (
