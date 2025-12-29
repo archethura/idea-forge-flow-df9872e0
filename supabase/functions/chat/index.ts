@@ -85,6 +85,20 @@ const getToolsForLevel = (level: string) => {
           description: "List all notes in the current folder",
           parameters: { type: "object", properties: {}, required: [] },
         },
+      },
+      {
+        type: "function",
+        function: {
+          name: "web_search",
+          description: "Search the web using DuckDuckGo to find information on any topic. Use this when the user asks questions about the real world that require up-to-date information.",
+          parameters: {
+            type: "object",
+            properties: {
+              query: { type: "string", description: "The search query to look up" },
+            },
+            required: ["query"],
+          },
+        },
       }
     );
   }
@@ -296,6 +310,58 @@ async function executeTool(
           .order('created_at', { ascending: false });
         if (error) throw error;
         return { success: true, result: data, message: `Found ${data.length} notes` };
+      }
+
+      case 'web_search': {
+        const query = encodeURIComponent(args.query);
+        console.log('Performing DuckDuckGo search for:', args.query);
+        
+        // Use DuckDuckGo Instant Answer API
+        const ddgResponse = await fetch(`https://api.duckduckgo.com/?q=${query}&format=json&no_redirect=1&no_html=1`);
+        
+        if (!ddgResponse.ok) {
+          throw new Error('DuckDuckGo search failed');
+        }
+        
+        const ddgData = await ddgResponse.json();
+        
+        // Extract relevant information from the response
+        const results: any = {
+          abstract: ddgData.Abstract || null,
+          abstractSource: ddgData.AbstractSource || null,
+          abstractURL: ddgData.AbstractURL || null,
+          answer: ddgData.Answer || null,
+          definition: ddgData.Definition || null,
+          definitionSource: ddgData.DefinitionSource || null,
+          heading: ddgData.Heading || null,
+          relatedTopics: (ddgData.RelatedTopics || []).slice(0, 5).map((topic: any) => ({
+            text: topic.Text,
+            url: topic.FirstURL,
+          })).filter((t: any) => t.text),
+        };
+        
+        // Build a readable summary
+        let summary = '';
+        if (results.answer) {
+          summary = results.answer;
+        } else if (results.abstract) {
+          summary = results.abstract;
+          if (results.abstractSource) {
+            summary += ` (Source: ${results.abstractSource})`;
+          }
+        } else if (results.definition) {
+          summary = results.definition;
+        } else if (results.relatedTopics.length > 0) {
+          summary = 'Related topics:\n' + results.relatedTopics.map((t: any) => `- ${t.text}`).join('\n');
+        } else {
+          summary = 'No direct answer found. Try rephrasing your search query.';
+        }
+        
+        return { 
+          success: true, 
+          result: { summary, details: results }, 
+          message: `Web search completed for "${args.query}"` 
+        };
       }
 
       // Outline level tools
