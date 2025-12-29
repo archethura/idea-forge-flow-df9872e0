@@ -127,5 +127,6 @@ export interface NavigationState {
   folderId: string | null;
   outlineId: string | null;
   documentId: string | null;
+  chatId: string | null;
   level: NavigationLevel;
 }

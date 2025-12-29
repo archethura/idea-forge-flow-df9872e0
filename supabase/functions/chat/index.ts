@@ -501,6 +501,20 @@ When you use a tool:
         systemPrompt += `\n\n### Current Folder: ${context.folder.name}`;
       }
       
+      // Include all chats history for folder context
+      if (context.chatHistory && context.chatHistory.length > 0) {
+        systemPrompt += `\n\n### Previous conversations in this folder (${context.chatHistory.length} chats):`;
+        context.chatHistory.forEach((chat: any, i: number) => {
+          systemPrompt += `\n\n#### Chat: "${chat.title}"`;
+          if (chat.messages && chat.messages.length > 0) {
+            chat.messages.slice(-10).forEach((msg: any) => {
+              const role = msg.role === 'user' ? 'User' : 'AI';
+              systemPrompt += `\n${role}: ${msg.content.slice(0, 200)}${msg.content.length > 200 ? '...' : ''}`;
+            });
+          }
+        });
+      }
+      
       if (context.notes && context.notes.length > 0) {
         systemPrompt += `\n\n### Notes in this folder (${context.notes.length}):`;
         context.notes.forEach((note: any, i: number) => {
