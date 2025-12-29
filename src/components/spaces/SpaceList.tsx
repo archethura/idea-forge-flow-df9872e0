@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Space } from '@/types/database';
-import { Plus, Layers, MoreHorizontal, Trash2, Edit2 } from 'lucide-react';
+import { Plus, Layers, MoreHorizontal, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,37 +49,35 @@ export const SpaceList: React.FC<SpaceListProps> = ({
   };
 
   return (
-    <div className="p-4 space-y-3">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+    <div className="p-3">
+      <div className="flex items-center justify-between mb-3 px-2">
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Spaces
-        </h2>
+        </span>
         <Dialog open={isCreating} onOpenChange={setIsCreating}>
           <DialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-6 w-6">
-              <Plus className="w-4 h-4" />
+            <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-foreground">
+              <Plus className="w-3.5 h-3.5" />
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="bg-card border-border">
             <DialogHeader>
               <DialogTitle>Create New Space</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div>
-                <Input
-                  placeholder="Space name"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
-                />
-              </div>
-              <div>
-                <Input
-                  placeholder="Description (optional)"
-                  value={newDescription}
-                  onChange={(e) => setNewDescription(e.target.value)}
-                />
-              </div>
+            <div className="space-y-3 pt-2">
+              <Input
+                placeholder="Space name"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+                className="bg-secondary border-border/50"
+              />
+              <Input
+                placeholder="Description (optional)"
+                value={newDescription}
+                onChange={(e) => setNewDescription(e.target.value)}
+                className="bg-secondary border-border/50"
+              />
               <Button onClick={handleCreate} className="w-full">
                 Create Space
               </Button>
@@ -87,34 +86,35 @@ export const SpaceList: React.FC<SpaceListProps> = ({
         </Dialog>
       </div>
 
-      <div className="space-y-1">
+      <div className="space-y-0.5">
         {spaces.map((space) => (
           <div
             key={space.id}
-            className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all ${
+            className={cn(
+              "group flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer transition-colors",
               selectedSpaceId === space.id
-                ? 'bg-primary/20 text-primary'
-                : 'hover:bg-accent/50 text-foreground/80 hover:text-foreground'
-            }`}
+                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+            )}
             onClick={() => onSelectSpace(space.id)}
           >
-            <span className="text-lg">{space.icon}</span>
-            <span className="flex-1 font-medium truncate">{space.name}</span>
+            <span className="text-base">{space.icon}</span>
+            <span className="flex-1 text-sm font-medium truncate">{space.name}</span>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <MoreHorizontal className="w-4 h-4" />
+                  <MoreHorizontal className="w-3.5 h-3.5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onDeleteSpace(space.id)}>
-                  <Trash2 className="w-4 h-4 mr-2" />
+              <DropdownMenuContent align="end" className="bg-popover border-border">
+                <DropdownMenuItem onClick={() => onDeleteSpace(space.id)} className="text-destructive">
+                  <Trash2 className="w-3.5 h-3.5 mr-2" />
                   Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -123,10 +123,10 @@ export const SpaceList: React.FC<SpaceListProps> = ({
         ))}
 
         {spaces.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
-            <Layers className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No spaces yet</p>
-            <p className="text-xs">Create one to get started</p>
+          <div className="text-center py-8 px-4">
+            <Layers className="w-8 h-8 mx-auto mb-3 text-muted-foreground/30" />
+            <p className="text-sm text-muted-foreground">No spaces yet</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">Create one to get started</p>
           </div>
         )}
       </div>

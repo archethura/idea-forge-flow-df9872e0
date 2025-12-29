@@ -2,8 +2,7 @@ import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigation } from '@/contexts/NavigationContext';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, LogOut, Layers, Settings, Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { ChevronLeft, LogOut, Settings } from 'lucide-react';
 
 interface AppHeaderProps {
   spaceName?: string;
@@ -29,53 +28,43 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   ].filter(Boolean);
 
   return (
-    <header className="h-14 border-b border-border/50 bg-background/80 backdrop-blur-xl flex items-center justify-between px-4 sticky top-0 z-50">
-      <div className="flex items-center gap-3">
-        {state.level !== 'space' && (
-          <Button variant="ghost" size="icon" onClick={navigateBack}>
-            <ChevronLeft className="w-5 h-5" />
+    <header className="h-12 border-b border-border/30 bg-background flex items-center justify-between px-4">
+      <div className="flex items-center gap-2">
+        {state.level !== 'space' && state.spaceId && (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={navigateBack}
+            className="h-7 w-7"
+          >
+            <ChevronLeft className="w-4 h-4" />
           </Button>
         )}
         
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-primary/20">
-            <Layers className="w-4 h-4 text-primary" />
-          </div>
-          <div className="flex items-center gap-1 text-sm">
-            {breadcrumbs.map((crumb, index) => (
-              <React.Fragment key={index}>
-                {index > 0 && <span className="text-muted-foreground">/</span>}
-                <span className={index === breadcrumbs.length - 1 ? 'font-medium' : 'text-muted-foreground'}>
-                  {crumb}
-                </span>
-              </React.Fragment>
-            ))}
-            {breadcrumbs.length === 0 && (
-              <span className="font-semibold text-gradient">SPACE</span>
-            )}
-          </div>
+        <div className="flex items-center gap-1.5 text-sm">
+          {breadcrumbs.map((crumb, index) => (
+            <React.Fragment key={index}>
+              {index > 0 && <span className="text-muted-foreground/50">/</span>}
+              <span className={index === breadcrumbs.length - 1 ? 'font-medium text-foreground' : 'text-muted-foreground'}>
+                {crumb}
+              </span>
+            </React.Fragment>
+          ))}
+          {breadcrumbs.length === 0 && (
+            <span className="text-muted-foreground">Select a space</span>
+          )}
         </div>
       </div>
 
-      <div className="flex-1 max-w-md mx-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search everything..."
-            className="pl-10 bg-muted/50 border-none"
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground hidden md:block">
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-muted-foreground hidden md:block mr-2">
           {user?.email}
         </span>
-        <Button variant="ghost" size="icon">
-          <Settings className="w-4 h-4" />
+        <Button variant="ghost" size="icon" className="h-7 w-7">
+          <Settings className="w-3.5 h-3.5" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={signOut}>
-          <LogOut className="w-4 h-4" />
+        <Button variant="ghost" size="icon" onClick={signOut} className="h-7 w-7">
+          <LogOut className="w-3.5 h-3.5" />
         </Button>
       </div>
     </header>
