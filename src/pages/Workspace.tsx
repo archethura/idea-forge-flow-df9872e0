@@ -283,22 +283,58 @@ const WorkspaceContent: React.FC = () => {
         />
         
         <div className="flex-1 flex overflow-hidden">
-          {/* Folder level: Show chat list + folder chat panel */}
+          {/* Folder level: Unified sidebar with chats + outlines */}
           {state.level === 'folder' && state.folderId ? (
             <>
-              {/* Chat List Sidebar */}
-              <div className="w-[240px] border-r border-border/30 bg-card/20">
-                <ChatList
-                  chats={chats}
-                  selectedChatId={state.chatId}
-                  onSelectChat={navigateToChat}
-                  onCreateChat={createChat}
-                  onDeleteChat={deleteChat}
-                />
+              {/* Unified Sidebar: Chats + Outlines/Notes */}
+              <div className="w-[280px] border-r border-border/30 bg-card/20 flex flex-col overflow-hidden">
+                {/* Folder Header */}
+                <div className="px-4 py-3 border-b border-border/30">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg level-folder flex items-center justify-center">
+                      <FolderIcon className="w-3 h-3" />
+                    </div>
+                    <span className="font-medium text-sm text-foreground truncate">{currentFolder?.name}</span>
+                  </div>
+                </div>
+                
+                {/* Tabs for Chats / Content */}
+                <Tabs defaultValue="chats" className="flex-1 flex flex-col overflow-hidden">
+                  <TabsList className="mx-3 mt-3 bg-secondary/50 shrink-0">
+                    <TabsTrigger value="chats" className="gap-1.5 text-xs flex-1">
+                      <MessageSquare className="w-3 h-3" />
+                      Chats
+                    </TabsTrigger>
+                    <TabsTrigger value="content" className="gap-1.5 text-xs flex-1">
+                      <FileText className="w-3 h-3" />
+                      Content
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="chats" className="flex-1 overflow-hidden m-0 data-[state=active]:flex data-[state=active]:flex-col">
+                    <ChatList
+                      chats={chats}
+                      selectedChatId={state.chatId}
+                      onSelectChat={navigateToChat}
+                      onCreateChat={createChat}
+                      onDeleteChat={deleteChat}
+                    />
+                  </TabsContent>
+                  
+                  <TabsContent value="content" className="flex-1 overflow-y-auto m-0 p-3">
+                    <OutlineList
+                      outlines={outlines}
+                      selectedOutlineId={null}
+                      onSelectOutline={navigateToOutline}
+                      onCreateOutline={createOutline}
+                      onDeleteOutline={deleteOutline}
+                    />
+                  </TabsContent>
+                </Tabs>
               </div>
               
-              {/* Folder Chat Panel */}
-              <div className="flex-1 border-r border-border/30">
+              {/* Folder Chat Panel - Full Width */}
+              <div className="flex-1">
                 <FolderChatPanel
                   chatId={state.chatId}
                   chatTitle={currentChat?.title || 'New Chat'}
@@ -311,37 +347,39 @@ const WorkspaceContent: React.FC = () => {
               </div>
             </>
           ) : (
-            /* Other levels: Use regular ChatPanel */
-            <div className="flex-1 border-r border-border/30">
-              <ChatPanel 
-                context={chatContext} 
-                contextLabel={getContextLabel()} 
-                level={currentLevel}
-                onDataChange={handleDataChange}
-              />
-            </div>
+            /* Other levels: Use regular ChatPanel + Content Panel */
+            <>
+              <div className="flex-1 border-r border-border/30">
+                <ChatPanel 
+                  context={chatContext} 
+                  contextLabel={getContextLabel()} 
+                  level={currentLevel}
+                  onDataChange={handleDataChange}
+                />
+              </div>
+              
+              {/* Content Panel - Secondary */}
+              {showContent && (
+                <div className="w-[420px] overflow-y-auto scrollbar-thin bg-card/30 animate-fade-in">
+                  <ContentPanel />
+                </div>
+              )}
+              
+              {/* Toggle button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowContent(!showContent)}
+                className="absolute right-4 top-[72px] z-10 bg-background/80 backdrop-blur-sm border border-border/30"
+              >
+                {showContent ? (
+                  <PanelRightClose className="w-4 h-4" />
+                ) : (
+                  <PanelRightOpen className="w-4 h-4" />
+                )}
+              </Button>
+            </>
           )}
-          
-          {/* Content Panel - Secondary */}
-          {showContent && (
-            <div className="w-[420px] overflow-y-auto scrollbar-thin bg-card/30 animate-fade-in">
-              <ContentPanel />
-            </div>
-          )}
-          
-          {/* Toggle button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowContent(!showContent)}
-            className="absolute right-4 top-[72px] z-10 bg-background/80 backdrop-blur-sm border border-border/30"
-          >
-            {showContent ? (
-              <PanelRightClose className="w-4 h-4" />
-            ) : (
-              <PanelRightOpen className="w-4 h-4" />
-            )}
-          </Button>
         </div>
       </div>
     </div>
