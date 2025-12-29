@@ -24,13 +24,24 @@ const WorkspaceContent: React.FC = () => {
   const { state, navigateToSpace, navigateToFolder, navigateToOutline, navigateToDocument } = useNavigation();
   const [showContent, setShowContent] = useState(true);
   
-  const { spaces } = useSpaces();
-  const { folders, createFolder, deleteFolder } = useFolders(state.spaceId);
-  const { notes } = useNotes(state.folderId);
-  const { outlines, createOutline, deleteOutline } = useOutlines(state.folderId);
-  const { documents, createDocument, deleteDocument } = useDocuments(state.outlineId);
-  const { pointTree, points, createPoint, updatePoint, deletePoint } = usePoints(state.outlineId);
-  const { cardTree, cards, createCard, updateCard, deleteCard } = useCards(state.documentId);
+  const { spaces, refetch: refetchSpaces } = useSpaces();
+  const { folders, createFolder, deleteFolder, refetch: refetchFolders } = useFolders(state.spaceId);
+  const { notes, refetch: refetchNotes } = useNotes(state.folderId);
+  const { outlines, createOutline, deleteOutline, refetch: refetchOutlines } = useOutlines(state.folderId);
+  const { documents, createDocument, deleteDocument, refetch: refetchDocuments } = useDocuments(state.outlineId);
+  const { pointTree, points, createPoint, updatePoint, deletePoint, refetch: refetchPoints } = usePoints(state.outlineId);
+  const { cardTree, cards, createCard, updateCard, deleteCard, refetch: refetchCards } = useCards(state.documentId);
+
+  // Refetch data after AI makes changes
+  const handleDataChange = () => {
+    refetchSpaces();
+    refetchFolders();
+    refetchNotes();
+    refetchOutlines();
+    refetchDocuments();
+    refetchPoints();
+    refetchCards();
+  };
 
   // Get current items for breadcrumbs and context
   const currentSpace = spaces.find(s => s.id === state.spaceId);
@@ -256,6 +267,7 @@ const WorkspaceContent: React.FC = () => {
               context={chatContext} 
               contextLabel={getContextLabel()} 
               level={currentLevel}
+              onDataChange={handleDataChange}
             />
           </div>
           

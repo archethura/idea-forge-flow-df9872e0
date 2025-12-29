@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       cards: {
         Row: {
+          ai_lock: boolean
           content: string
           created_at: string
           document_id: string
@@ -26,6 +27,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_lock?: boolean
           content?: string
           created_at?: string
           document_id: string
@@ -36,6 +38,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_lock?: boolean
           content?: string
           created_at?: string
           document_id?: string
