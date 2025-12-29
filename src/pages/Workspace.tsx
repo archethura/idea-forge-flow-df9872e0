@@ -1,5 +1,4 @@
-import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import React, { useState } from 'react';
 import { useNavigation, NavigationProvider } from '@/contexts/NavigationContext';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { AppSidebar } from '@/components/layout/AppSidebar';
@@ -8,6 +7,7 @@ import { OutlineList } from '@/components/outlines/OutlineList';
 import { DocumentList } from '@/components/documents/DocumentList';
 import { PointTree } from '@/components/outlines/PointTree';
 import { CardEditor } from '@/components/documents/CardEditor';
+import { HierarchicalChatView } from '@/components/chat/HierarchicalChatView';
 import { useSpaces } from '@/hooks/useSpaces';
 import { useFolders } from '@/hooks/useFolders';
 import { useOutlines } from '@/hooks/useOutlines';
@@ -15,10 +15,12 @@ import { useDocuments } from '@/hooks/useDocuments';
 import { usePoints } from '@/hooks/usePoints';
 import { useCards } from '@/hooks/useCards';
 import { Separator } from '@/components/ui/separator';
-import { Layers, FolderIcon, FileText, File, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Layers, FolderIcon, FileText, File, Sparkles, MessageSquare, X } from 'lucide-react';
 
 const WorkspaceContent: React.FC = () => {
   const { state, navigateToSpace, navigateToFolder, navigateToOutline, navigateToDocument } = useNavigation();
+  const [isChatOpen, setIsChatOpen] = useState(false);
   
   const { spaces } = useSpaces();
   const { folders, createFolder, deleteFolder } = useFolders(state.spaceId);
@@ -203,9 +205,33 @@ const WorkspaceContent: React.FC = () => {
           documentName={currentDocument?.title}
         />
         
-        <main className="flex-1 overflow-auto p-8">
-          {renderContent()}
-        </main>
+        <div className="flex-1 flex overflow-hidden">
+          <main className={`flex-1 overflow-auto p-8 transition-all ${isChatOpen ? 'pr-4' : ''}`}>
+            {renderContent()}
+          </main>
+          
+          {/* Chat Panel */}
+          {isChatOpen ? (
+            <div className="w-96 border-l border-border bg-card/50 flex flex-col">
+              <div className="flex items-center justify-between p-4 border-b border-border">
+                <span className="font-semibold">AI Chat</span>
+                <Button variant="ghost" size="icon" onClick={() => setIsChatOpen(false)}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="flex-1 overflow-hidden p-4">
+                <HierarchicalChatView />
+              </div>
+            </div>
+          ) : (
+            <Button
+              className="fixed bottom-6 right-6 rounded-full shadow-lg h-14 w-14"
+              onClick={() => setIsChatOpen(true)}
+            >
+              <MessageSquare className="w-6 h-6" />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
