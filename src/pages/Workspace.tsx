@@ -17,7 +17,7 @@ import { useDocuments } from '@/hooks/useDocuments';
 import { usePoints } from '@/hooks/usePoints';
 import { useCards } from '@/hooks/useCards';
 import { useNotes } from '@/hooks/useNotes';
-import { useChats, useChatMessages } from '@/hooks/useChats';
+import { useChats, useChatMessages, useChatsWithMessages } from '@/hooks/useChats';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Layers, FolderIcon, FileText, File, Sparkles, List, PanelRightOpen, PanelRightClose, MessageSquare } from 'lucide-react';
 import { useState, useCallback } from 'react';
@@ -31,7 +31,8 @@ const WorkspaceContent: React.FC = () => {
   const { folders, createFolder, deleteFolder, refetch: refetchFolders } = useFolders(state.spaceId);
   const { notes, refetch: refetchNotes } = useNotes(state.folderId);
   const { chats, createChat, updateChat, deleteChat, refetch: refetchChats } = useChats(state.folderId);
-  const { outlines, createOutline, deleteOutline, refetch: refetchOutlines } = useOutlines(state.folderId);
+  const { outlines, createOutline, generateOutline, deleteOutline, refetch: refetchOutlines } = useOutlines(state.folderId);
+  const { chatsWithMessages, refetch: refetchChatsWithMessages } = useChatsWithMessages(state.folderId);
   const { documents, createDocument, deleteDocument, refetch: refetchDocuments } = useDocuments(state.outlineId);
   const { pointTree, points, createPoint, updatePoint, deletePoint, refetch: refetchPoints } = usePoints(state.outlineId);
   const { cardTree, cards, createCard, updateCard, deleteCard, refetch: refetchCards } = useCards(state.documentId);
@@ -42,11 +43,12 @@ const WorkspaceContent: React.FC = () => {
     refetchFolders();
     refetchNotes();
     refetchChats();
+    refetchChatsWithMessages();
     refetchOutlines();
     refetchDocuments();
     refetchPoints();
     refetchCards();
-  }, [refetchSpaces, refetchFolders, refetchNotes, refetchChats, refetchOutlines, refetchDocuments, refetchPoints, refetchCards]);
+  }, [refetchSpaces, refetchFolders, refetchNotes, refetchChats, refetchChatsWithMessages, refetchOutlines, refetchDocuments, refetchPoints, refetchCards]);
 
   // Handle chat title updates
   const handleChatTitleUpdate = useCallback((chatId: string, title: string) => {
@@ -331,6 +333,9 @@ const WorkspaceContent: React.FC = () => {
                       onSelectOutline={navigateToOutline}
                       onCreateOutline={createOutline}
                       onDeleteOutline={deleteOutline}
+                      notes={notes}
+                      chatsWithMessages={chatsWithMessages}
+                      onGenerateOutline={generateOutline}
                     />
                   </TabsContent>
                 </Tabs>
