@@ -170,3 +170,68 @@ export const useChatMessages = (chatId: string | null) => {
     refetch: fetchMessages,
   };
 };
+
+// Hook to fetch all chats with their messages for a folder
+export const useChatsWithMessages = (folderId: string | null) => {
+  const [chatsWithMessages, setChatsWithMessages] = useState<{ chat: Chat; messages: ChatMessage[] }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchChatsWithMessages = useCallback(async () => {
+    if (!folderId) {
+      setChatsWithMessages([]);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // First fetch all chats
+      const { data: chatsData, error: chatsError } = await supabase
+        .from('chats')
+        .select('*')
+        .eq('folder_id', folderId)
+        .order('updated_at', { ascending: false });
+
+      if (chatsError) throw chatsError;
+
+      // Then fetch messages for each chat
+      const result: { chat: Chat; messages: ChatMessage[] }[] = [];
+      
+      for (const chat of (chatsData || [])) {
+        const { data: messagesData, error: messagesError } = await supabase
+          .from('chat_messages')
+          .select('*')
+          .eq('chat_id', chat.id)
+          .order('created_at', { ascending: true });
+
+        if (messagesError) {
+          console.error('Error fetching messages for chat:', chat.id, messagesError);
+          continue;
+        }
+
+        result.push({
+          chat,
+          messages: (messagesData || []).map(msg => ({
+            ...msg,
+            role: msg.role as 'user' | 'assistant',
+          })),
+        });
+      }
+
+      setChatsWithMessages(result);
+    } catch (error) {
+      console.error('Error fetching chats with messages:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [folderId]);
+
+  useEffect(() => {
+    fetchChatsWithMessages();
+  }, [fetchChatsWithMessages]);
+
+  return {
+    chatsWithMessages,
+    loading,
+    refetch: fetchChatsWithMessages,
+  };
+};

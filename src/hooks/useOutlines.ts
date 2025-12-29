@@ -60,6 +60,28 @@ export const useOutlines = (folderId: string | null) => {
     }
   };
 
+  const generateOutline = async (title: string, content: string) => {
+    if (!folderId) return null;
+
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-outline', {
+        body: { title, content, folderId },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      // Refetch to get the new outline
+      await fetchOutlines();
+      toast.success(`Outline "${title}" generated with ${data.pointCount} points`);
+      return data.outline;
+    } catch (error) {
+      console.error('Error generating outline:', error);
+      toast.error('Failed to generate outline');
+      return null;
+    }
+  };
+
   const updateOutline = async (id: string, updates: Partial<Outline>) => {
     try {
       const { error } = await supabase
@@ -96,6 +118,7 @@ export const useOutlines = (folderId: string | null) => {
     outlines,
     loading,
     createOutline,
+    generateOutline,
     updateOutline,
     deleteOutline,
     refetch: fetchOutlines,

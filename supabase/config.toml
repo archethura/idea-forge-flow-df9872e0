@@ -1,1 +1,7 @@
 project_id = "rsvnlvheizybcakicspb"
+
+[functions.chat]
+verify_jwt = true
+
+[functions.generate-outline]
+verify_jwt = true

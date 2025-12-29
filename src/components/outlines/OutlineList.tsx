@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Outline } from '@/types/database';
-import { Plus, FileText, MoreHorizontal, Trash2, ChevronRight } from 'lucide-react';
+import { Outline, Note, Chat, ChatMessage } from '@/types/database';
+import { Plus, FileText, MoreHorizontal, Trash2, ChevronRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -10,20 +9,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { CreateOutlineModal } from './CreateOutlineModal';
 
 interface OutlineListProps {
   outlines: Outline[];
   selectedOutlineId: string | null;
   onSelectOutline: (outlineId: string) => void;
-  onCreateOutline: (title: string, description?: string) => void;
+  onCreateOutline: (title: string, description?: string) => Promise<any>;
   onDeleteOutline: (id: string) => void;
+  notes?: Note[];
+  chatsWithMessages?: { chat: Chat; messages: ChatMessage[] }[];
+  onGenerateOutline?: (title: string, selectedContent: string) => Promise<void>;
 }
 
 export const OutlineList: React.FC<OutlineListProps> = ({
@@ -32,17 +28,15 @@ export const OutlineList: React.FC<OutlineListProps> = ({
   onSelectOutline,
   onCreateOutline,
   onDeleteOutline,
+  notes = [],
+  chatsWithMessages = [],
+  onGenerateOutline,
 }) => {
   const [isCreating, setIsCreating] = useState(false);
-  const [newTitle, setNewTitle] = useState('');
-  const [newDescription, setNewDescription] = useState('');
 
-  const handleCreate = () => {
-    if (newTitle.trim()) {
-      onCreateOutline(newTitle.trim(), newDescription.trim() || undefined);
-      setNewTitle('');
-      setNewDescription('');
-      setIsCreating(false);
+  const handleGenerateOutline = async (title: string, content: string) => {
+    if (onGenerateOutline) {
+      await onGenerateOutline(title, content);
     }
   };
 
@@ -52,37 +46,24 @@ export const OutlineList: React.FC<OutlineListProps> = ({
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Outlines
         </span>
-        <Dialog open={isCreating} onOpenChange={setIsCreating}>
-          <DialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground">
-              <Plus className="w-4 h-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="bg-card border-border">
-            <DialogHeader>
-              <DialogTitle>Create New Outline</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-3 pt-2">
-              <Input
-                placeholder="Outline title"
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
-                className="bg-secondary border-border/50"
-              />
-              <Input
-                placeholder="Description (optional)"
-                value={newDescription}
-                onChange={(e) => setNewDescription(e.target.value)}
-                className="bg-secondary border-border/50"
-              />
-              <Button onClick={handleCreate} className="w-full">
-                Create Outline
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-6 w-6 text-muted-foreground hover:text-foreground"
+          onClick={() => setIsCreating(true)}
+        >
+          <Plus className="w-4 h-4" />
+        </Button>
       </div>
+
+      <CreateOutlineModal
+        open={isCreating}
+        onOpenChange={setIsCreating}
+        notes={notes}
+        chats={chatsWithMessages}
+        onCreateOutline={onCreateOutline}
+        onGenerateOutline={handleGenerateOutline}
+      />
 
       <div className="grid gap-2">
         {outlines.map((outline) => (
