@@ -272,7 +272,10 @@ const WorkspaceContent: React.FC = () => {
   // Main workspace with chat-first layout
   return (
     <div className="flex h-screen bg-background">
-      <AppSidebar selectedSpaceId={state.spaceId} onSelectSpace={navigateToSpace} />
+      {/* Hide spaces sidebar at folder level */}
+      {state.level !== 'folder' && (
+        <AppSidebar selectedSpaceId={state.spaceId} onSelectSpace={navigateToSpace} />
+      )}
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <AppHeader
