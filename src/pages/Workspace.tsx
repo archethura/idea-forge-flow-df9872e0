@@ -16,10 +16,13 @@ import { usePoints } from '@/hooks/usePoints';
 import { useCards } from '@/hooks/useCards';
 import { useNotes } from '@/hooks/useNotes';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Layers, FolderIcon, FileText, File, Sparkles, MessageSquare, List, PenLine } from 'lucide-react';
+import { Layers, FolderIcon, FileText, File, Sparkles, List, PanelRightOpen, PanelRightClose } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 const WorkspaceContent: React.FC = () => {
   const { state, navigateToSpace, navigateToFolder, navigateToOutline, navigateToDocument } = useNavigation();
+  const [showContent, setShowContent] = useState(true);
   
   const { spaces } = useSpaces();
   const { folders, createFolder, deleteFolder } = useFolders(state.spaceId);
@@ -65,251 +68,217 @@ const WorkspaceContent: React.FC = () => {
   }, [state.level, currentSpace, currentFolder, currentOutline, currentDocument, notes, points, cards]);
 
   const getContextLabel = () => {
-    if (currentDocument) return `document "${currentDocument.title}"`;
-    if (currentOutline) return `outline "${currentOutline.title}"`;
-    if (currentFolder) return `folder "${currentFolder.name}"`;
-    if (currentSpace) return `space "${currentSpace.name}"`;
+    if (currentDocument) return `"${currentDocument.title}"`;
+    if (currentOutline) return `"${currentOutline.title}"`;
+    if (currentFolder) return `"${currentFolder.name}"`;
+    if (currentSpace) return `"${currentSpace.name}"`;
     return 'workspace';
   };
 
-  // Document level view
-  if (state.level === 'document' && state.documentId) {
-    return (
-      <div className="flex h-screen bg-background">
-        <AppSidebar selectedSpaceId={state.spaceId} onSelectSpace={navigateToSpace} />
-        
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <AppHeader
-            spaceName={currentSpace?.name}
-            folderName={currentFolder?.name}
-            outlineName={currentOutline?.title}
-            documentName={currentDocument?.title}
+  const currentLevel = state.level as 'space' | 'folder' | 'outline' | 'document';
+
+  // Content panel for current level
+  const ContentPanel = () => {
+    if (state.level === 'document' && state.documentId) {
+      return (
+        <div className="p-6 animate-fade-in">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 rounded-lg level-document flex items-center justify-center">
+              <File className="w-4 h-4" />
+            </div>
+            <div>
+              <h1 className="font-semibold text-foreground">{currentDocument?.title}</h1>
+              <p className="text-xs text-muted-foreground">Document cards</p>
+            </div>
+          </div>
+          <CardEditor
+            cards={cardTree}
+            points={points}
+            onCreateCard={(content, sourcePointId, parentCardId) => createCard(content, sourcePointId, parentCardId)}
+            onUpdateCard={(id, content) => updateCard(id, { content })}
+            onDeleteCard={deleteCard}
           />
+        </div>
+      );
+    }
+
+    if (state.level === 'outline' && state.outlineId) {
+      return (
+        <div className="p-6 animate-fade-in">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 rounded-lg level-outline flex items-center justify-center">
+              <FileText className="w-4 h-4" />
+            </div>
+            <div>
+              <h1 className="font-semibold text-foreground">{currentOutline?.title}</h1>
+              {currentOutline?.description && (
+                <p className="text-xs text-muted-foreground">{currentOutline.description}</p>
+              )}
+            </div>
+          </div>
           
-          <div className="flex-1 flex overflow-hidden">
-            {/* Content */}
-            <div className="flex-1 overflow-auto border-r border-border">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <File className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h1 className="text-xl font-semibold">{currentDocument?.title}</h1>
-                    <p className="text-sm text-muted-foreground">Document cards</p>
-                  </div>
-                </div>
-                <CardEditor
-                  cards={cardTree}
-                  points={points}
-                  onCreateCard={(content, sourcePointId, parentCardId) => createCard(content, sourcePointId, parentCardId)}
-                  onUpdateCard={(id, content) => updateCard(id, { content })}
-                  onDeleteCard={deleteCard}
+          <Tabs defaultValue="points" className="w-full">
+            <TabsList className="mb-4 bg-secondary/50">
+              <TabsTrigger value="points" className="gap-2 text-sm">
+                <List className="w-3.5 h-3.5" />
+                Points
+              </TabsTrigger>
+              <TabsTrigger value="documents" className="gap-2 text-sm">
+                <File className="w-3.5 h-3.5" />
+                Documents
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="points">
+              <div className="bg-card/50 rounded-xl p-4 border border-border/30">
+                <PointTree
+                  points={pointTree}
+                  onCreatePoint={(text, parentId) => createPoint(text, parentId)}
+                  onUpdatePoint={(id, text) => updatePoint(id, { text })}
+                  onDeletePoint={deletePoint}
                 />
               </div>
-            </div>
+            </TabsContent>
             
-            {/* Chat */}
-            <div className="w-[400px] flex-shrink-0">
-              <ChatPanel context={chatContext} contextLabel={getContextLabel()} />
+            <TabsContent value="documents">
+              <DocumentList
+                documents={documents}
+                selectedDocumentId={null}
+                onSelectDocument={navigateToDocument}
+                onCreateDocument={createDocument}
+                onDeleteDocument={deleteDocument}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
+      );
+    }
+
+    if (state.level === 'folder' && state.folderId) {
+      return (
+        <div className="p-6 animate-fade-in">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 rounded-lg level-folder flex items-center justify-center">
+              <FolderIcon className="w-4 h-4" />
+            </div>
+            <div>
+              <h1 className="font-semibold text-foreground">{currentFolder?.name}</h1>
+              <p className="text-xs text-muted-foreground">Outlines & notes</p>
             </div>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Outline level view
-  if (state.level === 'outline' && state.outlineId) {
-    return (
-      <div className="flex h-screen bg-background">
-        <AppSidebar selectedSpaceId={state.spaceId} onSelectSpace={navigateToSpace} />
-        
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <AppHeader
-            spaceName={currentSpace?.name}
-            folderName={currentFolder?.name}
-            outlineName={currentOutline?.title}
+          
+          <OutlineList
+            outlines={outlines}
+            selectedOutlineId={null}
+            onSelectOutline={navigateToOutline}
+            onCreateOutline={createOutline}
+            onDeleteOutline={deleteOutline}
           />
-          
-          <div className="flex-1 flex overflow-hidden">
-            {/* Content */}
-            <div className="flex-1 overflow-auto border-r border-border">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <FileText className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h1 className="text-xl font-semibold">{currentOutline?.title}</h1>
-                    {currentOutline?.description && (
-                      <p className="text-sm text-muted-foreground">{currentOutline.description}</p>
-                    )}
-                  </div>
-                </div>
-                
-                <Tabs defaultValue="points" className="w-full">
-                  <TabsList className="mb-4">
-                    <TabsTrigger value="points" className="gap-2">
-                      <List className="w-4 h-4" />
-                      Points
-                    </TabsTrigger>
-                    <TabsTrigger value="documents" className="gap-2">
-                      <File className="w-4 h-4" />
-                      Documents
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="points">
-                    <div className="bg-card/30 rounded-xl p-4 border border-border/50">
-                      <PointTree
-                        points={pointTree}
-                        onCreatePoint={(text, parentId) => createPoint(text, parentId)}
-                        onUpdatePoint={(id, text) => updatePoint(id, { text })}
-                        onDeletePoint={deletePoint}
-                      />
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="documents">
-                    <DocumentList
-                      documents={documents}
-                      selectedDocumentId={null}
-                      onSelectDocument={navigateToDocument}
-                      onCreateDocument={createDocument}
-                      onDeleteDocument={deleteDocument}
-                    />
-                  </TabsContent>
-                </Tabs>
-              </div>
+        </div>
+      );
+    }
+
+    if (state.level === 'space' && state.spaceId) {
+      return (
+        <div className="p-6 animate-fade-in">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 rounded-lg level-space flex items-center justify-center">
+              <span className="text-sm">{currentSpace?.icon}</span>
             </div>
-            
-            {/* Chat */}
-            <div className="w-[400px] flex-shrink-0">
-              <ChatPanel context={chatContext} contextLabel={getContextLabel()} />
+            <div>
+              <h1 className="font-semibold text-foreground">{currentSpace?.name}</h1>
+              {currentSpace?.description && (
+                <p className="text-xs text-muted-foreground">{currentSpace.description}</p>
+              )}
             </div>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Folder level view
-  if (state.level === 'folder' && state.folderId) {
-    return (
-      <div className="flex h-screen bg-background">
-        <AppSidebar selectedSpaceId={state.spaceId} onSelectSpace={navigateToSpace} />
-        
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <AppHeader
-            spaceName={currentSpace?.name}
-            folderName={currentFolder?.name}
+          
+          <FolderList
+            folders={folders}
+            selectedFolderId={null}
+            onSelectFolder={navigateToFolder}
+            onCreateFolder={createFolder}
+            onDeleteFolder={deleteFolder}
           />
-          
-          <div className="flex-1 flex overflow-hidden">
-            {/* Content */}
-            <div className="flex-1 overflow-auto border-r border-border">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div 
-                    className="p-2 rounded-lg" 
-                    style={{ backgroundColor: `${currentFolder?.color}15` }}
-                  >
-                    <FolderIcon className="w-5 h-5" style={{ color: currentFolder?.color }} />
-                  </div>
-                  <div>
-                    <h1 className="text-xl font-semibold">{currentFolder?.name}</h1>
-                    <p className="text-sm text-muted-foreground">Outlines & notes</p>
-                  </div>
-                </div>
-                
-                <OutlineList
-                  outlines={outlines}
-                  selectedOutlineId={null}
-                  onSelectOutline={navigateToOutline}
-                  onCreateOutline={createOutline}
-                  onDeleteOutline={deleteOutline}
-                />
-              </div>
-            </div>
-            
-            {/* Chat */}
-            <div className="w-[400px] flex-shrink-0">
-              <ChatPanel context={chatContext} contextLabel={getContextLabel()} />
-            </div>
-          </div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  // Space level view
-  if (state.level === 'space' && state.spaceId) {
-    return (
-      <div className="flex h-screen bg-background">
-        <AppSidebar selectedSpaceId={state.spaceId} onSelectSpace={navigateToSpace} />
-        
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <AppHeader spaceName={currentSpace?.name} />
-          
-          <div className="flex-1 flex overflow-hidden">
-            {/* Content */}
-            <div className="flex-1 overflow-auto border-r border-border">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <span className="text-xl">{currentSpace?.icon}</span>
-                  </div>
-                  <div>
-                    <h1 className="text-xl font-semibold">{currentSpace?.name}</h1>
-                    {currentSpace?.description && (
-                      <p className="text-sm text-muted-foreground">{currentSpace.description}</p>
-                    )}
-                  </div>
-                </div>
-                
-                <FolderList
-                  folders={folders}
-                  selectedFolderId={null}
-                  onSelectFolder={navigateToFolder}
-                  onCreateFolder={createFolder}
-                  onDeleteFolder={deleteFolder}
-                />
-              </div>
-            </div>
-            
-            {/* Chat */}
-            <div className="w-[400px] flex-shrink-0">
-              <ChatPanel context={chatContext} contextLabel={getContextLabel()} />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+    return null;
+  };
 
   // Welcome screen (no space selected)
+  if (!state.spaceId) {
+    return (
+      <div className="flex h-screen bg-background">
+        <AppSidebar selectedSpaceId={state.spaceId} onSelectSpace={navigateToSpace} />
+        
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <AppHeader />
+          
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center max-w-md px-6 animate-fade-in">
+              <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-6">
+                <Layers className="w-8 h-8 text-foreground" />
+              </div>
+              <h1 className="text-2xl font-semibold mb-3">Welcome</h1>
+              <p className="text-muted-foreground mb-8">
+                Select a space from the sidebar to start. Each level has its own AI agent with full context.
+              </p>
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <Sparkles className="w-4 h-4" />
+                <span>Agent-first architecture</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Main workspace with chat-first layout
   return (
     <div className="flex h-screen bg-background">
       <AppSidebar selectedSpaceId={state.spaceId} onSelectSpace={navigateToSpace} />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <AppHeader />
+        <AppHeader
+          spaceName={currentSpace?.name}
+          folderName={currentFolder?.name}
+          outlineName={currentOutline?.title}
+          documentName={currentDocument?.title}
+        />
         
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center max-w-md px-6">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-6">
-              <Layers className="w-8 h-8 text-primary" />
-            </div>
-            <h1 className="text-2xl font-semibold mb-2">Welcome</h1>
-            <p className="text-muted-foreground mb-6">
-              Select a space from the sidebar to start organizing your thoughts.
-            </p>
-            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-              <Sparkles className="w-4 h-4" />
-              <span>AI-powered at every level</span>
-            </div>
+        <div className="flex-1 flex overflow-hidden">
+          {/* Chat Panel - Primary */}
+          <div className="flex-1 border-r border-border/30">
+            <ChatPanel 
+              context={chatContext} 
+              contextLabel={getContextLabel()} 
+              level={currentLevel}
+            />
           </div>
+          
+          {/* Content Panel - Secondary */}
+          {showContent && (
+            <div className="w-[420px] overflow-y-auto scrollbar-thin bg-card/30 animate-fade-in">
+              <ContentPanel />
+            </div>
+          )}
+          
+          {/* Toggle button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowContent(!showContent)}
+            className="absolute right-4 top-[72px] z-10 bg-background/80 backdrop-blur-sm border border-border/30"
+          >
+            {showContent ? (
+              <PanelRightClose className="w-4 h-4" />
+            ) : (
+              <PanelRightOpen className="w-4 h-4" />
+            )}
+          </Button>
         </div>
       </div>
     </div>
