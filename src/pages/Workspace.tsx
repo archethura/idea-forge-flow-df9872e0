@@ -28,7 +28,10 @@ const WorkspaceContent: React.FC = () => {
   
   const [newVentureName, setNewVentureName] = useState('');
   const [newSpaceName, setNewSpaceName] = useState('');
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [newWorldName, setNewWorldName] = useState('');
+  const [ventureDialogOpen, setVentureDialogOpen] = useState(false);
+  const [spaceDialogOpen, setSpaceDialogOpen] = useState(false);
+  const [worldDialogOpen, setWorldDialogOpen] = useState(false);
 
   const currentVenture = ventures.find(v => v.id === state.ventureId);
   const currentSpace = spaces.find(s => s.id === state.spaceId);
@@ -37,21 +40,32 @@ const WorkspaceContent: React.FC = () => {
 
   const handleCreateVenture = async () => {
     if (!newVentureName.trim()) return;
-    await createVenture(newVentureName);
+    const venture = await createVenture(newVentureName);
     setNewVentureName('');
-    setDialogOpen(false);
+    setVentureDialogOpen(false);
+    if (venture) {
+      navigateToVenture(venture.id);
+    }
   };
 
   const handleCreateSpace = async () => {
     if (!newSpaceName.trim()) return;
-    await createSpace(newSpaceName, undefined, undefined, 'space');
+    const space = await createSpace(newSpaceName, undefined, undefined, 'space');
     setNewSpaceName('');
+    setSpaceDialogOpen(false);
+    if (space) {
+      navigateToSpace(space.id);
+    }
   };
 
   const handleCreateWorld = async () => {
-    if (!newSpaceName.trim() || !state.spaceId) return;
-    await createSpace(newSpaceName, undefined, undefined, 'world', state.spaceId);
-    setNewSpaceName('');
+    if (!newWorldName.trim() || !state.spaceId) return;
+    const world = await createSpace(newWorldName, undefined, undefined, 'world', state.spaceId);
+    setNewWorldName('');
+    setWorldDialogOpen(false);
+    if (world) {
+      navigateToWorld(world.id);
+    }
   };
 
   // Welcome screen
@@ -81,7 +95,7 @@ const WorkspaceContent: React.FC = () => {
           </div>
 
           <div className="p-2 border-t border-border">
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <Dialog open={ventureDialogOpen} onOpenChange={setVentureDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="ghost" className="w-full justify-start gap-2 text-muted-foreground">
                   <Plus className="w-4 h-4" />
@@ -194,28 +208,58 @@ const WorkspaceContent: React.FC = () => {
                               )}
                             </div>
                           ))}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start gap-1 text-xs text-muted-foreground h-7"
-                            onClick={handleCreateWorld}
-                          >
-                            <Plus className="w-3 h-3" />
-                            New World
-                          </Button>
+                          <Dialog open={worldDialogOpen} onOpenChange={setWorldDialogOpen}>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="w-full justify-start gap-1 text-xs text-muted-foreground h-7"
+                              >
+                                <Plus className="w-3 h-3" />
+                                New World
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Create World</DialogTitle>
+                              </DialogHeader>
+                              <Input
+                                placeholder="World name..."
+                                value={newWorldName}
+                                onChange={e => setNewWorldName(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && handleCreateWorld()}
+                              />
+                              <Button onClick={handleCreateWorld}>Create</Button>
+                            </DialogContent>
+                          </Dialog>
                         </div>
                       )}
                     </div>
                   ))}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start gap-1 text-xs text-muted-foreground h-7"
-                    onClick={handleCreateSpace}
-                  >
-                    <Plus className="w-3 h-3" />
-                    New Space
-                  </Button>
+                  <Dialog open={spaceDialogOpen} onOpenChange={setSpaceDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start gap-1 text-xs text-muted-foreground h-7"
+                      >
+                        <Plus className="w-3 h-3" />
+                        New Space
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Create Space</DialogTitle>
+                      </DialogHeader>
+                      <Input
+                        placeholder="Space name..."
+                        value={newSpaceName}
+                        onChange={e => setNewSpaceName(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handleCreateSpace()}
+                      />
+                      <Button onClick={handleCreateSpace}>Create</Button>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               )}
             </div>
