@@ -5,17 +5,17 @@ import { useSpaces } from '@/hooks/useSpaces';
 import { useFolders } from '@/hooks/useFolders';
 import { useChats } from '@/hooks/useChats';
 import { useOutlines } from '@/hooks/useOutlines';
-import { Flame, ChevronRight, Plus, MessageSquare, Package, Factory, Palette } from 'lucide-react';
+import { Flame, ChevronRight, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { WorldView } from '@/types/database';
 
-const VIEW_CONFIG: Record<WorldView, { icon: React.ElementType; label: string; color: string }> = {
-  exchange: { icon: MessageSquare, label: 'Exchange', color: 'view-exchange' },
-  warehouse: { icon: Package, label: 'Warehouse', color: 'view-warehouse' },
-  factory: { icon: Factory, label: 'Factory', color: 'view-factory' },
-  studio: { icon: Palette, label: 'Studio', color: 'view-studio' },
+const VIEW_CONFIG: Record<WorldView, { label: string }> = {
+  exchange: { label: 'Exchange' },
+  warehouse: { label: 'Warehouse' },
+  factory: { label: 'Factory' },
+  studio: { label: 'Studio' },
 };
 
 const WorkspaceContent: React.FC = () => {
@@ -190,20 +190,15 @@ const WorkspaceContent: React.FC = () => {
                               {/* Views under this world */}
                               {state.worldId === world.id && state.view && (
                                 <div className="ml-4 mt-1 space-y-0.5">
-                                  {(Object.keys(VIEW_CONFIG) as WorldView[]).map(view => {
-                                    const cfg = VIEW_CONFIG[view];
-                                    const Icon = cfg.icon;
-                                    return (
-                                      <div
-                                        key={view}
-                                        onClick={() => navigateToView(view)}
-                                        className={`bear-list-item flex items-center gap-2 text-xs ${state.view === view ? 'active' : ''}`}
-                                      >
-                                        <Icon className="w-3 h-3" />
-                                        <span>{cfg.label}</span>
-                                      </div>
-                                    );
-                                  })}
+                                {(Object.keys(VIEW_CONFIG) as WorldView[]).map(view => (
+                                    <div
+                                      key={view}
+                                      onClick={() => navigateToView(view)}
+                                      className={`bear-list-item flex items-center gap-2 text-xs ${state.view === view ? 'active' : ''}`}
+                                    >
+                                      <span>{VIEW_CONFIG[view].label}</span>
+                                    </div>
+                                  ))}
                                 </div>
                               )}
                             </div>
