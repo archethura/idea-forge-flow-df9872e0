@@ -1,7 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Document, DeliverableStatus } from '@/types/database';
+import { Document, DeliverableStatus, GovernorSettings } from '@/types/database';
 import { toast } from 'sonner';
+
+// Helper to transform Supabase data to our Document type
+const transformDocument = (data: any): Document => ({
+  ...data,
+  governor_settings: (data.governor_settings || {}) as GovernorSettings,
+});
 
 export const useDocuments = (outlineId: string | null) => {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -22,7 +28,7 @@ export const useDocuments = (outlineId: string | null) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setDocuments(data || []);
+      setDocuments((data || []).map(transformDocument));
     } catch (error) {
       console.error('Error fetching documents:', error);
       toast.error('Failed to load documents');
@@ -50,9 +56,10 @@ export const useDocuments = (outlineId: string | null) => {
         .single();
 
       if (error) throw error;
-      setDocuments(prev => [data, ...prev]);
+      const doc = transformDocument(data);
+      setDocuments(prev => [doc, ...prev]);
       toast.success('Document created');
-      return data;
+      return doc;
     } catch (error) {
       console.error('Error creating document:', error);
       toast.error('Failed to create document');
@@ -62,9 +69,15 @@ export const useDocuments = (outlineId: string | null) => {
 
   const updateDocument = async (id: string, updates: Partial<Document>) => {
     try {
+      // Transform GovernorSettings to JSON-compatible format
+      const dbUpdates: any = { ...updates };
+      if (updates.governor_settings) {
+        dbUpdates.governor_settings = updates.governor_settings as any;
+      }
+      
       const { error } = await supabase
         .from('documents')
-        .update(updates)
+        .update(dbUpdates)
         .eq('id', id);
 
       if (error) throw error;

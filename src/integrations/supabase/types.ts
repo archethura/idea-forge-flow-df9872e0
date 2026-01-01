@@ -78,6 +78,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          is_ripe: boolean | null
           references_ids: string[] | null
           role: string
         }
@@ -86,6 +87,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          is_ripe?: boolean | null
           references_ids?: string[] | null
           role: string
         }
@@ -94,6 +96,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          is_ripe?: boolean | null
           references_ids?: string[] | null
           role?: string
         }
@@ -146,6 +149,7 @@ export type Database = {
           document_id: string
           format: string | null
           id: string
+          slab_ids: string[] | null
           title: string
         }
         Insert: {
@@ -154,6 +158,7 @@ export type Database = {
           document_id: string
           format?: string | null
           id?: string
+          slab_ids?: string[] | null
           title: string
         }
         Update: {
@@ -162,6 +167,7 @@ export type Database = {
           document_id?: string
           format?: string | null
           id?: string
+          slab_ids?: string[] | null
           title?: string
         }
         Relationships: [
@@ -177,6 +183,7 @@ export type Database = {
       documents: {
         Row: {
           created_at: string
+          governor_settings: Json | null
           id: string
           outline_id: string
           status: Database["public"]["Enums"]["deliverable_status"]
@@ -185,6 +192,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          governor_settings?: Json | null
           id?: string
           outline_id: string
           status?: Database["public"]["Enums"]["deliverable_status"]
@@ -193,6 +201,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          governor_settings?: Json | null
           id?: string
           outline_id?: string
           status?: Database["public"]["Enums"]["deliverable_status"]
@@ -243,6 +252,51 @@ export type Database = {
             columns: ["space_id"]
             isOneToOne: false
             referencedRelation: "spaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ingots: {
+        Row: {
+          created_at: string
+          id: string
+          order_index: number | null
+          ore_id: string | null
+          outline_id: string | null
+          pure_concept: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_index?: number | null
+          ore_id?: string | null
+          outline_id?: string | null
+          pure_concept: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_index?: number | null
+          ore_id?: string | null
+          outline_id?: string | null
+          pure_concept?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingots_ore_id_fkey"
+            columns: ["ore_id"]
+            isOneToOne: false
+            referencedRelation: "ore"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ingots_outline_id_fkey"
+            columns: ["outline_id"]
+            isOneToOne: false
+            referencedRelation: "outlines"
             referencedColumns: ["id"]
           },
         ]
@@ -314,6 +368,61 @@ export type Database = {
             columns: ["folder_id"]
             isOneToOne: false
             referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ore: {
+        Row: {
+          created_at: string
+          folder_id: string
+          id: string
+          is_processed: boolean | null
+          refined_text: string
+          source_comment_id: string | null
+          source_note_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          folder_id: string
+          id?: string
+          is_processed?: boolean | null
+          refined_text: string
+          source_comment_id?: string | null
+          source_note_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          folder_id?: string
+          id?: string
+          is_processed?: boolean | null
+          refined_text?: string
+          source_comment_id?: string | null
+          source_note_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ore_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ore_source_comment_id_fkey"
+            columns: ["source_comment_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ore_source_note_id_fkey"
+            columns: ["source_note_id"]
+            isOneToOne: false
+            referencedRelation: "notes"
             referencedColumns: ["id"]
           },
         ]
@@ -404,25 +513,79 @@ export type Database = {
           description: string | null
           icon: string | null
           id: string
+          level: string | null
           name: string
+          parent_space_id: string | null
           updated_at: string
           user_id: string
+          venture_id: string | null
         }
         Insert: {
           created_at?: string
           description?: string | null
           icon?: string | null
           id?: string
+          level?: string | null
           name: string
+          parent_space_id?: string | null
           updated_at?: string
           user_id: string
+          venture_id?: string | null
         }
         Update: {
           created_at?: string
           description?: string | null
           icon?: string | null
           id?: string
+          level?: string | null
           name?: string
+          parent_space_id?: string | null
+          updated_at?: string
+          user_id?: string
+          venture_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spaces_parent_space_id_fkey"
+            columns: ["parent_space_id"]
+            isOneToOne: false
+            referencedRelation: "spaces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "spaces_venture_id_fkey"
+            columns: ["venture_id"]
+            isOneToOne: false
+            referencedRelation: "ventures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ventures: {
+        Row: {
+          created_at: string
+          icon: string | null
+          id: string
+          name: string
+          prime_directive: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name: string
+          prime_directive?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          prime_directive?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -439,6 +602,7 @@ export type Database = {
       owns_note: { Args: { note_uuid: string }; Returns: boolean }
       owns_outline: { Args: { outline_uuid: string }; Returns: boolean }
       owns_space: { Args: { space_uuid: string }; Returns: boolean }
+      owns_venture: { Args: { venture_uuid: string }; Returns: boolean }
     }
     Enums: {
       content_type: "idea" | "note" | "research" | "chat"

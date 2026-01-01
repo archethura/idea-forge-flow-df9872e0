@@ -2,65 +2,114 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+/* BASEFIRE STUDIO: Bear Notes Aesthetic */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 7%;
+    /* Core Palette: Red/Black/White */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 8%;
+
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 8%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 8%;
+
+    --primary: 0 72% 51%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 15%;
+
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 0 0% 92%;
+    --accent-foreground: 0 0% 15%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 72% 51%;
+
+    --radius: 0.375rem;
+
+    /* Sidebar - Bear Notes style */
+    --sidebar-background: 0 0% 97%;
+    --sidebar-foreground: 0 0% 35%;
+    --sidebar-primary: 0 0% 8%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 92%;
+    --sidebar-accent-foreground: 0 0% 8%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 0 72% 51%;
+
+    /* Custom Basefire tokens */
+    --surface-elevated: 0 0% 100%;
+    --surface-subtle: 0 0% 98%;
+    --text-secondary: 0 0% 50%;
+    --text-tertiary: 0 0% 65%;
+    
+    /* Basefire Red accent */
+    --fire: 0 72% 51%;
+    --fire-foreground: 0 0% 100%;
+    --fire-muted: 0 50% 95%;
+    
+    /* View indicators */
+    --view-exchange: 0 72% 51%;
+    --view-warehouse: 35 90% 50%;
+    --view-factory: 200 80% 50%;
+    --view-studio: 280 70% 55%;
+  }
+
+  .dark {
+    --background: 0 0% 6%;
     --foreground: 0 0% 95%;
 
-    --card: 0 0% 9%;
+    --card: 0 0% 8%;
     --card-foreground: 0 0% 95%;
 
-    --popover: 0 0% 9%;
+    --popover: 0 0% 8%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 7%;
+    --primary: 0 72% 55%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 14%;
+    --secondary: 0 0% 12%;
     --secondary-foreground: 0 0% 95%;
 
-    --muted: 0 0% 18%;
+    --muted: 0 0% 15%;
     --muted-foreground: 0 0% 55%;
 
-    --accent: 0 0% 22%;
+    --accent: 0 0% 18%;
     --accent-foreground: 0 0% 95%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 16%;
-    --input: 0 0% 16%;
-    --ring: 0 0% 40%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 0 72% 55%;
 
-    --radius: 0.625rem;
-
-    --sidebar-background: 0 0% 5%;
+    --sidebar-background: 0 0% 4%;
     --sidebar-foreground: 0 0% 60%;
     --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 0 0% 7%;
+    --sidebar-primary-foreground: 0 0% 8%;
     --sidebar-accent: 0 0% 12%;
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 0 0% 12%;
-    --sidebar-ring: 0 0% 40%;
+    --sidebar-ring: 0 72% 55%;
 
-    /* Custom semantic tokens */
-    --surface-elevated: 0 0% 11%;
-    --surface-subtle: 0 0% 9%;
+    --surface-elevated: 0 0% 10%;
+    --surface-subtle: 0 0% 8%;
     --text-secondary: 0 0% 65%;
     --text-tertiary: 0 0% 45%;
     
-    /* Agent accent - subtle blue tint for AI elements */
-    --agent: 210 100% 60%;
-    --agent-foreground: 0 0% 100%;
-    --agent-muted: 210 40% 25%;
-    
-    /* Level indicators */
-    --level-space: 280 60% 60%;
-    --level-folder: 30 80% 55%;
-    --level-outline: 160 60% 50%;
-    --level-document: 210 80% 55%;
+    --fire-muted: 0 50% 15%;
   }
 }
 
@@ -71,20 +120,20 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Instrument Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-weight: 600;
     letter-spacing: -0.02em;
   }
 
   code, pre {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'JetBrains Mono', monospace;
   }
 }
 
@@ -105,20 +154,26 @@
     color: hsl(var(--text-tertiary));
   }
 
-  /* Agent styling */
-  .agent-gradient {
-    background: linear-gradient(135deg, hsl(var(--agent)) 0%, hsl(220 80% 50%) 100%);
+  /* Fire/Brand styling */
+  .fire-gradient {
+    background: linear-gradient(135deg, hsl(var(--fire)) 0%, hsl(25 90% 55%) 100%);
   }
 
-  .agent-glow {
-    box-shadow: 0 0 20px hsl(var(--agent) / 0.3);
+  .fire-glow {
+    box-shadow: 0 0 20px hsl(var(--fire) / 0.3);
   }
 
-  /* Level colors */
-  .level-space { background-color: hsl(var(--level-space) / 0.15); color: hsl(var(--level-space)); }
-  .level-folder { background-color: hsl(var(--level-folder) / 0.15); color: hsl(var(--level-folder)); }
-  .level-outline { background-color: hsl(var(--level-outline) / 0.15); color: hsl(var(--level-outline)); }
-  .level-document { background-color: hsl(var(--level-document) / 0.15); color: hsl(var(--level-document)); }
+  /* View colors */
+  .view-exchange { background-color: hsl(var(--view-exchange) / 0.1); color: hsl(var(--view-exchange)); }
+  .view-warehouse { background-color: hsl(var(--view-warehouse) / 0.1); color: hsl(var(--view-warehouse)); }
+  .view-factory { background-color: hsl(var(--view-factory) / 0.1); color: hsl(var(--view-factory)); }
+  .view-studio { background-color: hsl(var(--view-studio) / 0.1); color: hsl(var(--view-studio)); }
+
+  /* Bear Notes whitespace */
+  .bear-prose {
+    @apply leading-relaxed;
+    line-height: 1.75;
+  }
 
   /* Subtle transitions */
   .transition-subtle {
@@ -142,6 +197,15 @@
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background-color: hsl(var(--border));
     border-radius: 3px;
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
   }
 }
 
@@ -185,5 +249,19 @@
 
   .thinking-dots span:nth-child(3) {
     animation-delay: 0.4s;
+  }
+
+  /* Bear Notes list styling */
+  .bear-list {
+    @apply space-y-0.5;
+  }
+
+  .bear-list-item {
+    @apply px-3 py-2 rounded-md text-sm cursor-pointer transition-colors;
+    @apply hover:bg-accent/50;
+  }
+
+  .bear-list-item.active {
+    @apply bg-accent text-accent-foreground font-medium;
   }
 }
