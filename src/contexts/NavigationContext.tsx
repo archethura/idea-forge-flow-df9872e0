@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { NavigationState, NavigationLevel } from '@/types/database';
+import { NavigationState, NavigationLevel, WorldView } from '@/types/database';
 
 interface NavigationContextType {
   state: NavigationState;
+  navigateToVenture: (ventureId: string) => void;
   navigateToSpace: (spaceId: string) => void;
-  navigateToFolder: (folderId: string) => void;
+  navigateToWorld: (worldId: string, folderId?: string) => void;
+  navigateToView: (view: WorldView) => void;
   navigateToOutline: (outlineId: string) => void;
   navigateToDocument: (documentId: string) => void;
   navigateToChat: (chatId: string) => void;
@@ -13,12 +15,15 @@ interface NavigationContextType {
 }
 
 const defaultState: NavigationState = {
+  ventureId: null,
   spaceId: null,
+  worldId: null,
   folderId: null,
   outlineId: null,
   documentId: null,
   chatId: null,
-  level: 'space',
+  view: null,
+  level: 'venture',
 };
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
@@ -26,25 +31,55 @@ const NavigationContext = createContext<NavigationContextType | undefined>(undef
 export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<NavigationState>(defaultState);
 
-  const navigateToSpace = useCallback((spaceId: string) => {
+  const navigateToVenture = useCallback((ventureId: string) => {
     setState({
-      spaceId,
+      ventureId,
+      spaceId: null,
+      worldId: null,
       folderId: null,
       outlineId: null,
       documentId: null,
       chatId: null,
-      level: 'space',
+      view: null,
+      level: 'venture',
     });
   }, []);
 
-  const navigateToFolder = useCallback((folderId: string) => {
+  const navigateToSpace = useCallback((spaceId: string) => {
     setState(prev => ({
       ...prev,
-      folderId,
+      spaceId,
+      worldId: null,
+      folderId: null,
       outlineId: null,
       documentId: null,
       chatId: null,
-      level: 'folder',
+      view: null,
+      level: 'space',
+    }));
+  }, []);
+
+  const navigateToWorld = useCallback((worldId: string, folderId?: string) => {
+    setState(prev => ({
+      ...prev,
+      worldId,
+      folderId: folderId || null,
+      outlineId: null,
+      documentId: null,
+      chatId: null,
+      view: 'exchange', // Default to Exchange view
+      level: 'exchange',
+    }));
+  }, []);
+
+  const navigateToView = useCallback((view: WorldView) => {
+    setState(prev => ({
+      ...prev,
+      outlineId: null,
+      documentId: null,
+      chatId: null,
+      view,
+      level: view as NavigationLevel,
     }));
   }, []);
 
@@ -54,7 +89,6 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       outlineId,
       documentId: null,
       chatId: null,
-      level: 'outline',
     }));
   }, []);
 
@@ -63,7 +97,6 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       ...prev,
       documentId,
       chatId: null,
-      level: 'document',
     }));
   }, []);
 
@@ -76,16 +109,27 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const navigateBack = useCallback(() => {
     setState(prev => {
-      switch (prev.level) {
-        case 'document':
-          return { ...prev, documentId: null, chatId: null, level: 'outline' as NavigationLevel };
-        case 'outline':
-          return { ...prev, outlineId: null, chatId: null, level: 'folder' as NavigationLevel };
-        case 'folder':
-          return { ...prev, folderId: null, chatId: null, level: 'space' as NavigationLevel };
-        default:
-          return prev;
+      // If in a document, go back to outline view
+      if (prev.documentId) {
+        return { ...prev, documentId: null, chatId: null };
       }
+      // If in an outline, go back to factory view
+      if (prev.outlineId) {
+        return { ...prev, outlineId: null, chatId: null };
+      }
+      // If in a view, go back to world selection
+      if (prev.view) {
+        return { ...prev, view: null, worldId: null, folderId: null, level: 'space' as NavigationLevel };
+      }
+      // If in a world, go back to space
+      if (prev.worldId) {
+        return { ...prev, worldId: null, folderId: null, view: null, level: 'space' as NavigationLevel };
+      }
+      // If in a space, go back to venture
+      if (prev.spaceId) {
+        return { ...prev, spaceId: null, level: 'venture' as NavigationLevel };
+      }
+      return prev;
     });
   }, []);
 
@@ -97,8 +141,10 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     <NavigationContext.Provider
       value={{
         state,
+        navigateToVenture,
         navigateToSpace,
-        navigateToFolder,
+        navigateToWorld,
+        navigateToView,
         navigateToOutline,
         navigateToDocument,
         navigateToChat,
